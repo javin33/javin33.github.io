@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.96.0" />
+
+
+<title>what happened to the 2021 football team - A Hugo website</title>
+<meta property="og:title" content="what happened to the 2021 football team - A Hugo website">
+
+
+  <link href='/favicon.ico' rel='icon' type='image/x-icon'/>
+
+
+
+  
+
+
+
+
+
+
+
+
+<link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css' rel='stylesheet' type='text/css' />
+
+
+
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/" class="nav-logo">
+    <img src="/images/logo.png"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+    
+    <li><a href="/about/">About</a></li>
+    
+    <li><a href="https://github.com/rstudio/blogdown">GitHub</a></li>
+    
+    <li><a href="https://twitter.com/rstudio">Twitter</a></li>
+    
+  </ul>
+</nav>
+
+      </header>
+
+
+<main class="content" role="main">
+
+  <article class="article">
+    
+    <span class="article-duration">8 min read</span>
+    
+
+    <h1 class="article-title">what happened to the 2021 football team</h1>
+
+    
+    <span class="article-date">2022-04-01</span>
+    
+
+    <div class="article-content">
+      
+
+
+<p>I chose to do my project on Nebraska’s 2021 football season because it was remarkably unlucky and I was there first-hand. I saw what the team was going through and I was there every practice. Most people only saw the finished product of the team, I was apart of the reconstruction and the progression of the 2021 season. I saw the talent we had and the time we spent working to get better. so for this project, I wanted to take a look at how this team stacked up against the other three-win teams, and to come to a conclusion that this team is the best three-win team in football.</p>
+<p>To do this, I first loaded in my libraries I needed here as well as my data I will use for this blog.</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──</code></pre>
+<pre><code>## ✓ ggplot2 3.3.5     ✓ purrr   0.3.4
+## ✓ tibble  3.1.6     ✓ dplyr   1.0.8
+## ✓ tidyr   1.1.4     ✓ stringr 1.4.0
+## ✓ readr   2.1.1     ✓ forcats 0.5.1</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(dplyr)
+library(ggrepel)
+library(ggplot2)
+library(cfbfastR)
+library(rvest)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;rvest&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:readr&#39;:
+## 
+##     guess_encoding</code></pre>
+<pre class="r"><code>fblogs &lt;- read_csv(&quot;http://mattwaite.github.io/sportsdatafiles/footballlogs21.csv&quot;)</code></pre>
+<pre><code>## Rows: 1655 Columns: 54</code></pre>
+<pre><code>## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: &quot;,&quot;
+## chr   (8): HomeAway, Opponent, Result, TeamFull, TeamURL, Outcome, Team, Con...
+## dbl  (45): Game, PassingCmp, PassingAtt, PassingPct, PassingYds, PassingTD, ...
+## date  (1): Date
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+<pre class="r"><code>wl &lt;- read_csv(&quot;data/wl_data.csv&quot;)</code></pre>
+<pre><code>## Rows: 130 Columns: 21
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: &quot;,&quot;
+## chr  (3): team, conference, division
+## dbl (18): year, expectedWins, total.games, total.wins, total.losses, total.t...
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+<pre class="r"><code>sr &lt;- read_csv(&quot;data/sports_ref_data.csv&quot;)</code></pre>
+<pre><code>## Rows: 130 Columns: 17
+## ── Column specification ────────────────────────────────────────────────────────
+## Delimiter: &quot;,&quot;
+## chr  (2): Team, Conf
+## dbl (14): Rk, W, L, Pct, Conf_W, Conf_L, Conf_Pct, Off, Def, SRS, SOS, AP Cu...
+## lgl  (1): Notes
+## 
+## ℹ Use `spec()` to retrieve the full column specification for this data.
+## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+<p>I wanted to take a look at point differential, so I mutated a new column to add a point differential metric for each game in my data.</p>
+<pre class="r"><code>fb &lt;- fblogs %&gt;%
+  mutate(PointDiff = TeamScore - OpponentScore)</code></pre>
+<p>Now that I have my point differential metric, I calculated each team’s point differential total for the season using the summarize function. I then joined that data set with my other data set that has a strength of schedule metric for each team. Once I had my new data set, I filtered out all teams that did not finish with three wins so that I could compare Nebraska against the other three-win teams of the 2021 season.</p>
+<pre class="r"><code>pdiff &lt;- fb %&gt;% 
+  group_by(Team) %&gt;% 
+  summarize(sum_pdiff = sum(PointDiff))
+
+szn_stats1 &lt;- fb %&gt;% inner_join(pdiff)</code></pre>
+<pre><code>## Joining, by = &quot;Team&quot;</code></pre>
+<pre class="r"><code>szn_stats &lt;- szn_stats1 %&gt;% inner_join(sr) %&gt;% 
+  select(Team, SOS, W, sum_pdiff)</code></pre>
+<pre><code>## Joining, by = &quot;Team&quot;</code></pre>
+<pre class="r"><code>threewin &lt;- szn_stats %&gt;% 
+  filter(W == &quot;3&quot;) </code></pre>
+<p>Now that I have just the three-win teams, I decided to calculate a residual to see what teams are performing better or worse than expected. I used the total point differential for each team that I just calculated as well as strength of schedule rating to create a residual. The blue line in this graph represents the predicted value, and the distance each team is from thee blue line is their residual. The further above the line a team is, the better they performed above expectations, and vice-versa.</p>
+<pre class="r"><code>fit &lt;- lm(sum_pdiff ~ SOS, data = threewin)
+
+threewin$predicted &lt;- predict(fit) 
+
+threewin$residuals &lt;- residuals(fit)
+
+neb &lt;- threewin %&gt;% 
+  filter(Team == &quot;Nebraska&quot;)
+
+ggplot(data=threewin, aes(x=SOS, y=sum_pdiff)) + 
+  geom_point(color= &quot;black&quot;)+ 
+  geom_smooth(method=lm, se=FALSE) +
+  geom_point(data=neb, aes(x=SOS, y=sum_pdiff), color=&quot;#E41C38&quot;) +
+  geom_text(aes(x=5.9, y= 80, label= &quot;Nebraska&quot;), color=&quot;#E41C38&quot;) +
+  labs(title=&quot;Nebraska Far Outperformed All Other Three Win Teams&quot;, subtitle=&quot;Nebraska had the hardest strength of schedule of all three-win teams while being the only team with positive point differential&quot;, caption=&quot;Source: sports-reference.com | Chart by Javin Wright&quot;, x=&quot;Strength of Schedule Rating&quot;, y=&quot;Total Point Differential&quot;) + 
+  theme_minimal() + 
+  theme(
+    plot.title = element_text(size = 18, face = &quot;bold&quot;),
+    axis.title = element_text(size = 10), 
+    plot.subtitle = element_text(size=8),
+    plot.caption = element_text(size = 7),
+    panel.grid.minor = element_blank())</code></pre>
+<pre><code>## `geom_smooth()` using formula &#39;y ~ x&#39;</code></pre>
+<p><img src="/2022/04/01/what-happened-to-the-2021-football-team/index_files/figure-html/unnamed-chunk-4-1.png" width="672" />
+Nebraska had the biggest residual by far of all teams that finished with three wins this past season. We led all three-win teams in both total point differential and strength of schedule rating by a significant margin, and we performed far above our expected output. We are sort of in a league of our own when compared to the other three-win teams. The interesting thing I found with this graph is that the predicted line has a positive slope, and it really shouldn’t. Total point differential shouldn’t increase as strength of schedule gets harder. It doesn’t make sense, until you factor in Nebraska’s unprecedented performance. While creating this residual graph, I tried running it without Nebraska and the predicted line had a negative slope like you’d expect. The reason this line is positive is because of Nebraska. Our performance was so strong this season despite our three-wins that we literally flipped this line positive.</p>
+<p>Nebraska was the only three-win team to finish with a positive point differential last season. It’s crazy to think about, especially when you factor in that we had one of the toughest schedules to play in all of college football. We lost so many games by so few points, so I wanted to see how that point differential progressed throughout the season.</p>
+<p>To do this, I joined two of my datasets together and calculated each team’s cumulative sum of point differential after each game. Once again, I filtered for the three win teams so that I could see how we performed against the teams that finished with the same record as us. Once I had my new data set, I created a step chart to see how these point differentials changed throughout the season.</p>
+<pre class="r"><code>wl &lt;- wl %&gt;% 
+  rename(Team = team)
+
+fbwl &lt;- fb %&gt;%  inner_join(wl)</code></pre>
+<pre><code>## Joining, by = &quot;Team&quot;</code></pre>
+<pre class="r"><code>step &lt;- fbwl %&gt;% 
+  group_by(Team) %&gt;% 
+  mutate(CumDiff =cumsum(PointDiff))
+
+threewin2 &lt;- step %&gt;% 
+  filter(total.wins == &quot;3&quot;)
+
+nu &lt;- step %&gt;% 
+  filter(Team == &quot;Nebraska&quot;)
+
+ggplot() +
+  geom_step(data=threewin2, aes(x=Date, y=CumDiff, group=Team), color=&quot;dark grey&quot;) +
+  geom_step(data=nu, aes(x=Date, y=CumDiff, group=Team), color=&quot;red&quot;) +
+  geom_hline(yintercept = 0, color = &quot;blue&quot;)+
+  annotate(&quot;text&quot;, x=(as.Date(&quot;2021-11-13&quot;)), y=95, label=&quot;Nebraska&quot;, color = &quot;red&quot;, cex= 4.5) +
+  labs(
+    x=&quot;Date&quot;, 
+    y=&quot;Cumulative Point Differential&quot;, 
+    title=&quot;Cumulative Point Differential for Three-Win Teams&quot;, 
+    subtitle=&quot;The Huskers were the only three win team to finish with a positive point differential&quot;, 
+    caption=&quot;Source: Sports-Reference.com | By Javin Wright&quot;) +
+  theme_minimal()+
+  theme(plot.title = element_text(size = 18, face = &quot;bold&quot;),
+    axis.title = element_text(size = 12), 
+    plot.subtitle = element_text(size=10),
+    plot.caption = element_text(size = 7),
+    panel.grid.minor = element_blank())</code></pre>
+<p><img src="/2022/04/01/what-happened-to-the-2021-football-team/index_files/figure-html/unnamed-chunk-5-1.png" width="672" />
+This graph does a good job of illustrating just how close we were in every game we lost this season. You can see the big positive jumps in the games like Northwestern, and you can really see how little it drops for every loss. We were in every game we played this season, and we really don’t belong in this three-win category.</p>
+<p>Finally, I wanted to see how Nebraska and the other three-win teams compared to the rest of the NCAA. I wanted to take a look at each team’s expected win differential, so I created a metric that subtracted each team’s total wins from their expected number of wins going into the season. Once I had this, I created a bubble chart that compared each team’s strength of schedule rating against their simple rating score, and I made the size of each team’s bubble their win differential.</p>
+<pre class="r"><code>windiff &lt;- wl %&gt;% 
+  mutate(windiff = expectedWins - total.wins)
+
+join &lt;- sr %&gt;% inner_join(windiff)</code></pre>
+<pre><code>## Joining, by = &quot;Team&quot;</code></pre>
+<pre class="r"><code>threewin1 &lt;- join %&gt;% 
+  filter(W == &quot;3&quot;, Team != &quot;Nebraska&quot;)
+
+neb &lt;- join %&gt;% 
+  filter(Team == &quot;Nebraska&quot;)
+  
+ggplot() + 
+  geom_point(
+    data=join, 
+    aes(x=SOS, y=SRS, size=windiff), 
+    color=&quot;light grey&quot;, alpha=.4) +
+  scale_size(range = c(0,20), name=&quot;Win Differential&quot;) +
+  geom_point(
+    data=threewin1, 
+    aes(x=SOS, y=SRS, size=windiff), 
+    color=&quot;light blue&quot;, alpha=.7)+
+  geom_point(
+    data=neb, 
+    aes(x=SOS, y=SRS, size=windiff), 
+    color=&quot;#E41C38&quot;) +
+  annotate(&quot;text&quot;, x=7.5, y=1.3, label=&quot;Nebraska&quot;, color = &quot;#E41C38&quot;, cex= 4.5)+
+  labs(
+    x=&quot;Strength of Schedule Rating&quot;, 
+    y=&quot;Simple Rating Score&quot;, 
+    title=&quot;Nebraska Can Hang with The Big Dogs&quot;, 
+    subtitle=&quot;The Huskers blew the other three-win teams out of the water despite having one of the biggest win differentials in college football&quot;, 
+caption=&quot;Blue = Three Win Teams                                         `                         Source: Sports-Reference.com | By Javin Wright&quot;) +
+  theme_minimal()+
+  theme(plot.title = element_text(size = 18, face = &quot;bold&quot;),
+    axis.title = element_text(size = 12), 
+    plot.subtitle = element_text(size=8),
+    plot.caption = element_text(size = 7),
+    panel.grid.minor = element_blank())</code></pre>
+<p><img src="/2022/04/01/what-happened-to-the-2021-football-team/index_files/figure-html/unnamed-chunk-6-1.png" width="672" />
+As you can see, Nebraska had one of the largest win differential margins in all of college football. Also, despite us having the toughest strength of schedule rating out of all three win teams, we still had the largest simple rating score by far. We played tough teams all season, and we played all those teams tough.</p>
+<p>With all the statistics and graphs shown in my website, it’s easy to see that Nebraska does not belong in this three-win category. The data shows that this team is capable of a lot more and should expect a lot more going into next season.</p>
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>
+    
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
+<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
+
+
+
+    
+<script src="/js/math-code.js"></script>
+<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+
+    
+  </body>
+</html>
+
